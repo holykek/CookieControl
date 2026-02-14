@@ -1,0 +1,17 @@
+# Packed extension / keys (do not commit)
+*.crx
+*.pem
+*.zip
+
+# Dependencies (if you add npm later)
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.swo

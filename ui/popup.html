@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CookieControl</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div id="main-view">
+    <header class="header">
+      <h1 class="title">CookieControl</h1>
+      <span id="plan-badge" class="badge badge-free">Free</span>
+    </header>
+
+    <section class="section" id="free-consent-section">
+      <p class="subtitle">On all websites</p>
+      <p class="section-hint">Auto-apply this choice on every site with a supported cookie banner.</p>
+      <div class="consent-options">
+        <label class="option"><input type="radio" name="consent-mode" value="essential"> Auto-deny non-essential (essential only)</label>
+        <label class="option"><input type="radio" name="consent-mode" value="accept-all"> Auto-accept all cookies</label>
+      </div>
+    </section>
+
+    <div id="pro-settings" class="hidden">
+      <section class="section pro-section">
+        <p class="subtitle">Default consent (Pro)</p>
+        <p class="pro-hint">Choose which types of cookies to allow by default.</p>
+        <div class="category-toggles">
+          <label class="option"><input type="checkbox" id="pro-essential" disabled> Essential (always on)</label>
+          <label class="option"><input type="checkbox" id="pro-functional"> Functional</label>
+          <label class="option"><input type="checkbox" id="pro-analytics"> Analytics</label>
+          <label class="option"><input type="checkbox" id="pro-marketing"> Marketing</label>
+        </div>
+      </section>
+      <section class="section pro-section">
+        <p class="subtitle">Rule for this site</p>
+        <p id="this-site-name" class="current-site">—</p>
+        <select id="this-site-rule" class="site-rule-select">
+          <option value="default">Use my default above</option>
+          <option value="essential">Essential only</option>
+          <option value="accept-all">Accept all</option>
+        </select>
+      </section>
+      <section class="section pro-section">
+        <p class="subtitle">Recent activity</p>
+        <div id="recent-activity" class="recent-activity"></div>
+      </section>
+    </div>
+
+    <section class="section">
+      <p class="subtitle">Current site</p>
+      <p id="current-site" class="current-site">—</p>
+      <p class="subtitle">Last action</p>
+      <p id="last-action" class="last-action">—</p>
+    </section>
+
+    <section class="section actions">
+      <button id="reapply" class="btn btn-primary">Re-apply consent</button>
+    </section>
+
+    <section class="section pro-cta">
+      <p class="pro-label">Pro</p>
+      <p class="pro-desc">Category rules, per-site overrides, consent history, dark-pattern handling.</p>
+      <button id="upgrade" class="btn btn-secondary">Upgrade</button>
+    </section>
+
+    <section class="section contact-section">
+      <a id="contact-btn" class="contact-link" href="mailto:businessgabz@gmail.com">Contact</a>
+    </section>
+  </div>
+
+  <div id="upgrade-view" class="hidden">
+    <header class="header">
+      <button id="upgrade-back" class="back-btn" type="button" aria-label="Back">←</button>
+      <h1 class="title">Pro</h1>
+    </header>
+    <section class="section">
+      <p class="pro-desc">Unlock these features:</p>
+      <ul class="pro-features">
+        <li><strong>Pick exactly what you allow</strong> — Choose which types of cookies (e.g. “only useful ones, no ads”) instead of just “all” or “essential only”.</li>
+        <li><strong>Different rules per website</strong> — e.g. “Accept all on my favourite shop, essential only everywhere else”.</li>
+        <li><strong>See what you chose before</strong> — A simple list of your past choices per site in the popup.</li>
+        <li><strong>Handle tricky popups</strong> — Find the real “Reject” or “Manage” when sites hide them; we open the right screen for you.</li>
+        <li><strong>Works on more sites</strong> — Support for more cookie banners and your rules always win over the site’s defaults.</li>
+      </ul>
+    </section>
+    <section class="section upgrade-actions">
+      <p id="pro-status-msg" class="pro-status-msg"></p>
+      <button id="buy-pro" class="btn btn-primary">Buy Pro</button>
+      <button id="unlock-pro" class="btn btn-secondary">Unlock Pro (dev)</button>
+      <p id="pro-login-hint" class="pro-note hidden">Already paid? <button type="button" id="open-login" class="link-btn">Log in</button> to restore Pro on this device.</p>
+      <p class="pro-note">Payments via ExtensionPay (Stripe). Chrome Web Store in-app purchases were discontinued in 2021.</p>
+    </section>
+  </div>
+
+  <script src="/config/extpay.js"></script>
+  <script src="/lib/ExtPay.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

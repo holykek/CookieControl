@@ -1,0 +1,58 @@
+{
+  "manifest_version": 3,
+  "name": "CookieControl",
+  "version": "0.1.0",
+  "icons": {
+    "16": "ui/icons/icon16.png",
+    "48": "ui/icons/icon48.png",
+    "128": "ui/icons/icon128.png"
+  },
+  "description": "Enforce your cookie consent preferences by interacting with consent banners. Does not bypass consent or modify cookies.",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background/serviceWorker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://extensionpay.com/*"],
+      "js": ["lib/ExtPay.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": [
+        "config/features.js",
+        "utils/timing.js",
+        "utils/domHelpers.js",
+        "storage/preferences.js",
+        "storage/logs.js",
+        "content/cmpRegistry.js",
+        "content/oneTrustHandler.js",
+        "content/cookiebotHandler.js",
+        "content/quantcastHandler.js",
+        "engine/ruleEvaluator.js",
+        "engine/consentExecutor.js",
+        "engine/darkPatternNavigator.js",
+        "content/cmpDetector.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "action": {
+    "default_popup": "ui/popup.html",
+    "default_title": "CookieControl",
+    "default_icon": {
+      "16": "ui/icons/icon16.png",
+      "48": "ui/icons/icon48.png",
+      "128": "ui/icons/icon128.png"
+    }
+  }
+}
