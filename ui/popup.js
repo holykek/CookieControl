@@ -111,12 +111,15 @@ function setupUpgrade() {
       }
     });
   }
-  document.getElementById('unlock-pro').addEventListener('click', () => {
-    chrome.storage.local.set({ [PRO_KEY]: true }, () => {
-      updatePlanBadge();
-      renderUpgradeView();
+  const unlockBtn = document.getElementById('unlock-pro');
+  if (unlockBtn) {
+    unlockBtn.addEventListener('click', () => {
+      chrome.storage.local.set({ [PRO_KEY]: true }, () => {
+        updatePlanBadge();
+        renderUpgradeView();
+      });
     });
-  });
+  }
 }
 
 function getHostname(url) {
