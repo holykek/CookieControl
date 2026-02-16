@@ -28,7 +28,9 @@
       const enabled =
         (h.name === 'OneTrust' && ns.isFeatureEnabled('CMP_ONETRUST')) ||
         (h.name === 'Cookiebot' && ns.isFeatureEnabled('CMP_COOKIEBOT')) ||
-        (h.name === 'Quantcast' && ns.isFeatureEnabled('CMP_QUANTCAST'));
+        (h.name === 'Quantcast' && ns.isFeatureEnabled('CMP_QUANTCAST')) ||
+        (h.name === 'CookieYes' && ns.isFeatureEnabled('CMP_COOKIEYES')) ||
+        (h.name === 'Generic' && ns.isFeatureEnabled('CMP_GENERIC'));
       if (!enabled) continue;
       try {
         if (h.detect()) return { name: h.name, handler: h };

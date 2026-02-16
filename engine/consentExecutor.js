@@ -34,7 +34,7 @@
       });
     }
     if (success && ns.setLastActionForDomain) {
-      await ns.setLastActionForDomain(ruleSet);
+      await ns.setLastActionForDomain(ruleSet, domain);
     }
     return { applied: true, cmpName: detected.name, success };
   }

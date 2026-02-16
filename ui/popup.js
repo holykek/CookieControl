@@ -188,8 +188,17 @@ function loadCurrentTab() {
     siteEl.textContent = hostname || tab.url;
 
     const key = getLastActionKey(hostname);
-    chrome.storage.local.get([key], (result) => {
-      renderLastAction(hostname, result[key]);
+    chrome.storage.local.get([key, LOG_KEY], (result) => {
+      let data = result[key];
+      if (!data || !data.ruleSet) {
+        const list = Array.isArray(result[LOG_KEY]) ? result[LOG_KEY] : [];
+        const forDomain = list.filter((e) => e.domain === hostname);
+        const entry = forDomain.length > 0 ? forDomain[forDomain.length - 1] : list[list.length - 1];
+        if (entry && entry.ruleApplied) {
+          data = { ruleSet: entry.ruleApplied, at: entry.timestamp };
+        }
+      }
+      renderLastAction(hostname, data);
     });
   });
 }

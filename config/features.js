@@ -14,6 +14,8 @@ const FEATURES = {
   CMP_ONETRUST: true,
   CMP_COOKIEBOT: true,
   CMP_QUANTCAST: true,
+  CMP_COOKIEYES: true,
+  CMP_GENERIC: true,
 
   // ---- PRO (paid; high value, low infra) ----
   CATEGORY_BASED_CONSENT: false,

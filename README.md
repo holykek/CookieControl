@@ -1,44 +1,60 @@
 # CookieControl
 
-Chrome-compatible browser extension that enforces your cookie consent preferences by interacting with consent banners (CMPs). It does **not** bypass consent, block cookies at the network level, or break site functionality.
+**CookieControl** is a Chrome extension that automatically applies your cookie preference on websites. Choose once—e.g. “reject non-essential cookies” or “accept all”—and the extension will click the right option on cookie banners so you don’t have to do it on every site.
 
-## Load in Chrome (development)
+It only interacts with the consent popups you see on each site. It does **not** bypass consent, block cookies at the network level, or change how sites work.
 
-1. Open `chrome://extensions/`
-2. Enable **Developer mode**
-3. Click **Load unpacked** and select the `CookieControl` folder
+---
 
-## MVP contents
+## How to get it
 
-- **Popup**: Free badge, current site, last action, “Re-apply consent” button, Pro CTA (placeholder)
-- **CMP detection**: On load, DOM mutations, bounded retry
-- **OneTrust**: Full implementation (detect + reject non-essential)
-- **Cookiebot & Quantcast**: Stubs (same interface, no action yet)
-- **Pro features**: Stubbed and gated by `config/features.js` and `isPro()`
+Install **CookieControl** from the [Chrome Web Store](https://chrome.google.com/webstore) (search for “CookieControl” or use the link from the project’s release notes).
 
-See **ARCHITECTURE.md** for folder structure and feature flags.
+---
 
-## Pro payments (ExtensionPay)
+## How to use it
 
-Google **discontinued Chrome Web Store in-app purchases** in 2021. CookieControl uses [ExtensionPay](https://extensionpay.com) (Stripe) for Pro payments.
+1. **Click the CookieControl icon** in your Chrome toolbar to open the popup.
+2. **Choose your preference** under “On all websites”:
+   - **Auto-deny non-essential** — only essential/necessary cookies (recommended if you want to limit tracking).
+   - **Auto-accept all cookies** — accept all cookies on every site.
+3. Visit any website. If it shows a cookie banner that CookieControl supports, the extension will automatically click the option that matches your choice.
+4. **Current site** and **Last action** in the popup show the site you’re on and what was applied there. Use **Re-apply consent** to run your choice again on the current page.
 
-**Out of the box:** The extension ships with a **stub** so it runs without payment setup. "Buy Pro" and "Log in" use that stub until you enable real payments.
+CookieControl works on many sites that use common consent banners (e.g. OneTrust, Cookiebot, CookieYes, and others). Support for more banner types is added over time.
 
-**To enable real payments:**
+---
 
-1. Sign up at [extensionpay.com](https://extensionpay.com) and register your extension. You’ll get an **extension ID** (e.g. `cookiecontrol`).
-2. Set that ID in **config/extpay.js**: change `EXTPAY_EXTENSION_ID` to your ID.
-3. Replace the stub with the real library:
-   ```bash
-   npm install extpay
-   cp node_modules/extpay/dist/ExtPay.js lib/ExtPay.js
-   ```
-4. Reload the extension. Configure your plans and Stripe in the ExtensionPay dashboard.
+## Free vs Pro
 
-**Popup flow:** **Buy Pro** opens the ExtensionPay payment page; **Log in** lets users who already paid restore Pro on this device. **Unlock Pro (dev)** is for local testing without paying.
+- **Free:** Set one global preference (reject non-essential or accept all), see last action per site, and re-apply consent from the popup.
+- **Pro:** Extra features such as per-site rules and finer control over cookie categories. Pro is optional; you can upgrade from the popup. Payments are handled via [ExtensionPay](https://extensionpay.com) (Stripe). The Chrome Web Store no longer supports in-app purchases, so Pro uses this method instead.
 
-## Permissions
+---
 
-- `storage` — local preferences and action log
-- `activeTab` — re-apply consent in current tab from popup
-- Host access — content scripts on http(s) pages to detect and interact with CMP UI only
+## Privacy and data
+
+- Your preference and per-site “last action” are stored **only on your device** (Chrome’s local storage). Nothing is sent to our servers.
+- The extension needs permission to run on web pages so it can find and click cookie banners. It does not collect your browsing history or the content of pages you visit.
+
+For full details, see the [Privacy Policy](https://holykek.github.io/CookieControl/privacy.html) (also linked from the Chrome Web Store listing).
+
+---
+
+## Permissions (why we need them)
+
+- **Storage** — to save your preference and last action per site, only on your device.
+- **Active tab** — used when you click “Re-apply consent” so the extension can run on the current tab.
+- **Access to sites you visit** — so the extension can detect cookie banners and click the right button. It only looks for consent UI; it does not read or send page content.
+
+---
+
+## For developers
+
+If you want to run CookieControl from source (e.g. to contribute or modify):
+
+1. Clone or download this repository.
+2. Open `chrome://extensions/`, turn on **Developer mode**, and click **Load unpacked**.
+3. Select the folder that contains `manifest.json`.
+
+See **ARCHITECTURE.md** for project structure, CMP handlers, and feature flags. Pro payments use ExtensionPay; setup for real payments is documented in the repo and on [extensionpay.com](https://extensionpay.com).

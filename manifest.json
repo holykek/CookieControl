@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CookieControl",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "icons": {
     "16": "ui/icons/icon16.png",
     "48": "ui/icons/icon48.png",
@@ -37,13 +37,15 @@
         "content/oneTrustHandler.js",
         "content/cookiebotHandler.js",
         "content/quantcastHandler.js",
+        "content/cookieYesHandler.js",
+        "content/genericConsentHandler.js",
         "engine/ruleEvaluator.js",
         "engine/consentExecutor.js",
         "engine/darkPatternNavigator.js",
         "content/cmpDetector.js"
       ],
       "run_at": "document_idle",
-      "all_frames": false
+      "all_frames": true
     }
   ],
   "action": {

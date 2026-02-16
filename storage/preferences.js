@@ -84,14 +84,15 @@
   }
 
   /**
-   * Save last action for current domain (Free: basic per-site remember).
+   * Save last action for a domain (Free: basic per-site remember).
    * @param {object} ruleSet - Rule set that was applied
+   * @param {string} [domain] - Domain to key by; if omitted uses getCurrentDomain()
    * @returns {Promise<void>}
    */
-  function setLastActionForDomain(ruleSet) {
-    const domain = getCurrentDomain();
-    if (!domain) return Promise.resolve();
-    const key = STORAGE_KEYS.LAST_ACTION_PREFIX + domain;
+  function setLastActionForDomain(ruleSet, domain) {
+    const d = domain || getCurrentDomain();
+    if (!d) return Promise.resolve();
+    const key = STORAGE_KEYS.LAST_ACTION_PREFIX + d;
     return new Promise((resolve) => {
       chrome.storage.local.set({ [key]: { ruleSet, at: Date.now() } }, resolve);
     });
