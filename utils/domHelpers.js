@@ -64,14 +64,45 @@
   }
 
   /**
-   * Safe click: only if visible and clickable. Returns whether click was attempted.
+   * True if el is already in the viewport (no need to scroll).
+   */
+  function isInViewport(el) {
+    if (!el || typeof el.getBoundingClientRect !== 'function') return true;
+    const r = el.getBoundingClientRect();
+    const margin = 2;
+    return r.top >= -margin && r.left >= -margin && r.bottom <= (window.innerHeight + margin) && r.right <= (window.innerWidth + margin);
+  }
+
+  /**
+   * True if clicking this element would navigate away (e.g. external link, subscription page).
+   */
+  function wouldNavigate(el) {
+    if (!el || (el.tagName || '').toUpperCase() !== 'A') return false;
+    const h = (el.getAttribute && el.getAttribute('href')) || '';
+    if (!h) return false;
+    const href = h.trim();
+    if (!href || href === '#' || href === '') return false;
+    if (/^javascript\s*:/i.test(href)) return false;
+    if (href.charAt(0) === '#') return false;
+    return true;
+  }
+
+  /**
+   * Safe click: click only. No scroll or focus to avoid unwanted page movement.
+   * Never clicks links that would navigate away. Also dispatch a native MouseEvent.
    * @param {Element} el
    * @returns {boolean}
    */
   function safeClick(el) {
     if (!isClickable(el)) return false;
+    if ((el.tagName || '').toUpperCase() === 'A') return false;
+    if (wouldNavigate(el)) return false;
     try {
       el.click();
+      // Some sites (BBC, React-based CMPs) only respond to a dispatched MouseEvent
+      try {
+        el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+      } catch (_) {}
       return true;
     } catch {
       return false;
@@ -80,12 +111,17 @@
 
   /**
    * Text content trimmed and lowercased for comparison (e.g. button labels).
+   * Uses aria-label or title if textContent is empty (some banners use those).
    * @param {Element} el
    * @returns {string}
    */
   function normalizedText(el) {
-    if (!el || !el.textContent) return '';
-    return el.textContent.replace(/\s+/g, ' ').trim().toLowerCase();
+    if (!el) return '';
+    let t = (el.textContent || '').replace(/\s+/g, ' ').trim();
+    if (!t && el.getAttribute) {
+      t = (el.getAttribute('aria-label') || el.getAttribute('title') || '').trim();
+    }
+    return t.toLowerCase();
   }
 
   ns.queryOne = queryOne;

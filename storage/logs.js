@@ -14,20 +14,32 @@
    * @returns {Promise<void>}
    */
   function appendLog(entry) {
-    const record = {
-      domain: entry.domain || '',
-      cmpName: entry.cmpName || '',
-      ruleApplied: entry.ruleApplied ?? entry,
-      success: entry.success !== false,
-      timestamp: Date.now(),
-    };
     return new Promise((resolve) => {
-      chrome.storage.local.get([LOG_KEY], (result) => {
-        const list = Array.isArray(result[LOG_KEY]) ? result[LOG_KEY] : [];
-        list.push(record);
-        const trimmed = list.slice(-MAX_LOG_ENTRIES);
-        chrome.storage.local.set({ [LOG_KEY]: trimmed }, resolve);
-      });
+      try {
+        if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local) {
+          resolve();
+          return;
+        }
+        const record = {
+          domain: (entry && entry.domain) || '',
+          cmpName: (entry && entry.cmpName) || '',
+          ruleApplied: (entry && (entry.ruleApplied !== undefined ? entry.ruleApplied : entry)) || {},
+          success: entry && entry.success !== false,
+          timestamp: Date.now(),
+        };
+        chrome.storage.local.get([LOG_KEY], (result) => {
+          try {
+            const list = Array.isArray(result && result[LOG_KEY]) ? result[LOG_KEY] : [];
+            list.push(record);
+            const trimmed = list.slice(-MAX_LOG_ENTRIES);
+            chrome.storage.local.set({ [LOG_KEY]: trimmed }, resolve);
+          } catch (e) {
+            resolve();
+          }
+        });
+      } catch (e) {
+        resolve();
+      }
     });
   }
 
@@ -36,16 +48,28 @@
    * @param {{ limit?: number, domain?: string }} opts
    * @returns {Promise<Array<{ domain: string, cmpName: string, ruleApplied: object, success: boolean, timestamp: number }>>}
    */
-  function getLogEntries(opts = {}) {
-    const limit = opts.limit ?? 50;
-    const domainFilter = opts.domain;
+  function getLogEntries(opts) {
+    const limit = (opts && opts.limit !== undefined) ? opts.limit : 50;
+    const domainFilter = opts && opts.domain;
     return new Promise((resolve) => {
-      chrome.storage.local.get([LOG_KEY], (result) => {
-        let list = Array.isArray(result[LOG_KEY]) ? result[LOG_KEY] : [];
-        if (domainFilter) list = list.filter((e) => e.domain === domainFilter);
-        list = list.slice(-limit).reverse();
-        resolve(list);
-      });
+      try {
+        if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local) {
+          resolve([]);
+          return;
+        }
+        chrome.storage.local.get([LOG_KEY], (result) => {
+          try {
+            let list = Array.isArray(result && result[LOG_KEY]) ? result[LOG_KEY] : [];
+            if (domainFilter) list = list.filter((e) => e && e.domain === domainFilter);
+            list = list.slice(-limit).reverse();
+            resolve(list);
+          } catch (e) {
+            resolve([]);
+          }
+        });
+      } catch (e) {
+        resolve([]);
+      }
     });
   }
 

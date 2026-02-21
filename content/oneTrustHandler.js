@@ -50,7 +50,7 @@
    */
   function findRejectButton(root) {
     const candidates = qAll(root, 'button, a[role="button"], [onclick]');
-    const rejectPhrases = ['reject all', 'reject', 'only essential', 'essential only', 'necessary only', 'decline', 'no thanks', 'alle ablehnen', 'tout refuser', 'rechazar'];
+    const rejectPhrases = ['reject all', 'reject', 'only essential', 'essential only', 'necessary only', 'decline', 'no thanks', 'alle ablehnen', 'tout refuser', 'rechazar', 'avvisa', 'endast nödvändiga', 'nej tack', 'afvis', 'afvis alle', 'weiger', 'rifiuta', 'rejeitar', 'odmítnout', 'hyväksy vain'];
     for (const el of candidates) {
       if (!visible(el)) continue;
       const t = text(el);
@@ -68,7 +68,7 @@
     const byId = q(root, SELECTORS.ACCEPT_ALL);
     if (byId && visible(byId)) return byId;
     const candidates = qAll(root, 'button, a[role="button"], [onclick]');
-    const acceptPhrases = ['accept all', 'accept', 'allow all', 'agree to all', 'allow', 'accept all cookies', 'alle akzeptieren', 'tout accepter', 'aceptar todo'];
+    const acceptPhrases = ['accept all', 'accept', 'allow all', 'agree to all', 'allow', 'accept all cookies', 'alle akzeptieren', 'tout accepter', 'aceptar todo', 'acceptera alla', 'acceptera', 'godkänn', 'tillåt alla', 'godta alle', 'accepter alle', 'hyväksy kaikki', 'accepteer', 'accetta', 'aceitar', 'přijmout'];
     for (const el of candidates) {
       if (!visible(el)) continue;
       const t = text(el);

@@ -27,7 +27,7 @@
   function findRejectButton(root) {
     const byId = root.querySelector('#CybotCookiebotDialogBodyButtonDecline, [id*="Decline"], [id*="decline"]');
     if (byId && visible(byId)) return byId;
-    const phrases = ['decline', 'reject', 'only necessary', 'essential only', 'necessary only', 'no thanks', 'alle ablehnen', 'refuser'];
+    const phrases = ['decline', 'reject', 'only necessary', 'essential only', 'necessary only', 'no thanks', 'alle ablehnen', 'refuser', 'avvisa', 'endast nödvändiga', 'nej tack', 'afvis', 'weiger', 'rifiuta', 'rejeitar', 'odmítnout'];
     const candidates = qAll(root, '#CybotCookiebotDialog button, #CybotCookiebotDialog a, [id*="Cookiebot"] button, [id*="Cookiebot"] a');
     for (const el of candidates) {
       if (!visible(el)) continue;
@@ -40,7 +40,7 @@
   function findAcceptAllButton(root) {
     const byId = root.querySelector('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll, [id*="AllowAll"], [id*="Allow"]');
     if (byId && visible(byId)) return byId;
-    const phrases = ['allow all', 'accept all', 'accept', 'agree', 'allow', 'alle akzeptieren', 'tout accepter'];
+    const phrases = ['allow all', 'accept all', 'accept', 'agree', 'allow', 'alle akzeptieren', 'tout accepter', 'acceptera alla', 'acceptera', 'godkänn', 'godta alle', 'accepter alle', 'hyväksy', 'accepteer', 'accetta', 'aceitar'];
     const candidates = qAll(root, '#CybotCookiebotDialog button, #CybotCookiebotDialog a, [id*="Cookiebot"] button, [id*="Cookiebot"] a');
     for (const el of candidates) {
       if (!visible(el)) continue;

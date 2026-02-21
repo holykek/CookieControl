@@ -22,12 +22,14 @@
 
   /**
    * Get current hostname for domain-based storage (no port).
+   * Safe in all frames and when location is restricted (e.g. some iframes).
    * @returns {string}
    */
   function getCurrentDomain() {
     try {
+      if (typeof window === 'undefined' || !window.location) return '';
       return window.location.hostname || '';
-    } catch {
+    } catch (e) {
       return '';
     }
   }
@@ -38,10 +40,25 @@
    */
   function getGlobalRules() {
     return new Promise((resolve) => {
-      chrome.storage.local.get([STORAGE_KEYS.GLOBAL_RULES], (result) => {
-        const stored = result[STORAGE_KEYS.GLOBAL_RULES];
-        resolve(stored && typeof stored === 'object' ? { ...DEFAULT_GLOBAL_RULES, ...stored } : { ...DEFAULT_GLOBAL_RULES });
-      });
+      try {
+        if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local) {
+          resolve({ ...DEFAULT_GLOBAL_RULES });
+          return;
+        }
+        chrome.storage.local.get([STORAGE_KEYS.GLOBAL_RULES], (result) => {
+          try {
+            const stored = result && result[STORAGE_KEYS.GLOBAL_RULES];
+            const merged = stored && typeof stored === 'object'
+              ? { ...DEFAULT_GLOBAL_RULES, ...stored }
+              : { ...DEFAULT_GLOBAL_RULES };
+            resolve(merged);
+          } catch (e) {
+            resolve({ ...DEFAULT_GLOBAL_RULES });
+          }
+        });
+      } catch (e) {
+        resolve({ ...DEFAULT_GLOBAL_RULES });
+      }
     });
   }
 
@@ -52,7 +69,15 @@
    */
   function setGlobalRules(rules) {
     return new Promise((resolve) => {
-      chrome.storage.local.set({ [STORAGE_KEYS.GLOBAL_RULES]: rules }, resolve);
+      try {
+        if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local) {
+          resolve();
+          return;
+        }
+        chrome.storage.local.set({ [STORAGE_KEYS.GLOBAL_RULES]: rules }, resolve);
+      } catch (e) {
+        resolve();
+      }
     });
   }
 
@@ -62,10 +87,22 @@
    */
   function getDomainRules() {
     return new Promise((resolve) => {
-      chrome.storage.local.get([STORAGE_KEYS.DOMAIN_RULES], (result) => {
-        const stored = result[STORAGE_KEYS.DOMAIN_RULES];
-        resolve(stored && typeof stored === 'object' ? stored : {});
-      });
+      try {
+        if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local) {
+          resolve({});
+          return;
+        }
+        chrome.storage.local.get([STORAGE_KEYS.DOMAIN_RULES], (result) => {
+          try {
+            const stored = result && result[STORAGE_KEYS.DOMAIN_RULES];
+            resolve(stored && typeof stored === 'object' ? stored : {});
+          } catch (e) {
+            resolve({});
+          }
+        });
+      } catch (e) {
+        resolve({});
+      }
     });
   }
 
@@ -74,13 +111,17 @@
    * @returns {Promise<{ essential: boolean, functional: boolean, analytics: boolean, marketing: boolean }>}
    */
   async function getRulesForCurrentDomain() {
-    const domain = getCurrentDomain();
-    const [global, domainRules] = await Promise.all([getGlobalRules(), getDomainRules()]);
-    const override = domain && domainRules[domain];
-    if (override && typeof override === 'object') {
-      return { ...DEFAULT_GLOBAL_RULES, ...global, ...override };
+    try {
+      const domain = getCurrentDomain();
+      const [global, domainRules] = await Promise.all([getGlobalRules(), getDomainRules()]);
+      const override = domain && domainRules && domainRules[domain];
+      if (override && typeof override === 'object') {
+        return { ...DEFAULT_GLOBAL_RULES, ...global, ...override };
+      }
+      return { ...DEFAULT_GLOBAL_RULES, ...global };
+    } catch (e) {
+      return { ...DEFAULT_GLOBAL_RULES };
     }
-    return { ...DEFAULT_GLOBAL_RULES, ...global };
   }
 
   /**
@@ -92,9 +133,19 @@
   function setLastActionForDomain(ruleSet, domain) {
     const d = domain || getCurrentDomain();
     if (!d) return Promise.resolve();
+    try {
+      if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local)
+        return Promise.resolve();
+    } catch (e) {
+      return Promise.resolve();
+    }
     const key = STORAGE_KEYS.LAST_ACTION_PREFIX + d;
     return new Promise((resolve) => {
-      chrome.storage.local.set({ [key]: { ruleSet, at: Date.now() } }, resolve);
+      try {
+        chrome.storage.local.set({ [key]: { ruleSet, at: Date.now() } }, resolve);
+      } catch (e) {
+        resolve();
+      }
     });
   }
 
@@ -104,11 +155,23 @@
    * @returns {Promise<{ ruleSet: object, at: number }|null>}
    */
   function getLastActionForDomain(domain) {
-    const key = STORAGE_KEYS.LAST_ACTION_PREFIX + (domain || getCurrentDomain());
     return new Promise((resolve) => {
-      chrome.storage.local.get([key], (result) => {
-        resolve(result[key] || null);
-      });
+      try {
+        if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local) {
+          resolve(null);
+          return;
+        }
+        const key = STORAGE_KEYS.LAST_ACTION_PREFIX + (domain || getCurrentDomain());
+        chrome.storage.local.get([key], (result) => {
+          try {
+            resolve(result && result[key] ? result[key] : null);
+          } catch (e) {
+            resolve(null);
+          }
+        });
+      } catch (e) {
+        resolve(null);
+      }
     });
   }
 
@@ -125,13 +188,21 @@
 
   if (typeof window !== 'undefined') {
     ns._isPro = false;
-    chrome.storage.local.get([STORAGE_KEYS.PRO], (result) => {
-      ns._isPro = !!result[STORAGE_KEYS.PRO];
-    });
-    chrome.storage.onChanged.addListener((changes, area) => {
-      if (area === 'local' && changes[STORAGE_KEYS.PRO]) {
-        ns._isPro = !!changes[STORAGE_KEYS.PRO].newValue;
+    try {
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.get([STORAGE_KEYS.PRO], (result) => {
+          try {
+            ns._isPro = !!(result && result[STORAGE_KEYS.PRO]);
+          } catch (e) {}
+        });
+        chrome.storage.onChanged.addListener((changes, area) => {
+          try {
+            if (area === 'local' && changes && changes[STORAGE_KEYS.PRO]) {
+              ns._isPro = !!changes[STORAGE_KEYS.PRO].newValue;
+            }
+          } catch (e) {}
+        });
       }
-    });
+    } catch (e) {}
   }
 })();

@@ -1,25 +1,62 @@
 {
   "manifest_version": 3,
   "name": "CookieControl",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "icons": {
-    "16": "ui/icons/icon16.png",
-    "48": "ui/icons/icon48.png",
-    "128": "ui/icons/icon128.png"
+    "16": "CookieControl.png",
+    "48": "CookieControl.png",
+    "128": "CookieControl.png"
   },
   "description": "Enforce your cookie consent preferences by interacting with consent banners. Does not bypass consent or modify cookies.",
-  "permissions": [
-    "storage",
-    "activeTab"
-  ],
-  "host_permissions": [
-    "http://*/*",
-    "https://*/*"
-  ],
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["http://*/*", "https://*/*"],
   "background": {
     "service_worker": "background/serviceWorker.js"
   },
   "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["config/consentPhrases.js","config/universalSelectors.js","content/universalConsentFallback.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    },
+    {
+      "matches": ["*://*.dailymail.co.uk/*", "*://dailymail.co.uk/*"],
+      "js": ["content/dailymailConsentHandler.js"],
+      "run_at": "document_end",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "*://*.telegraph.co.uk/*",
+        "*://telegraph.co.uk/*",
+        "*://*.independent.co.uk/*",
+        "*://*.theguardian.com/*",
+        "*://*.thetimes.co.uk/*",
+        "*://*.thesun.co.uk/*",
+        "*://*.mirror.co.uk/*",
+        "*://*.express.co.uk/*",
+        "*://*.standard.co.uk/*"
+      ],
+      "js": ["content/ukNewsConsentHandler.js"],
+      "run_at": "document_end",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "*://*.lefigaro.fr/*",
+        "*://lefigaro.fr/*",
+        "*://*.lemonde.fr/*",
+        "*://lemonde.fr/*",
+        "*://*.leparisien.fr/*",
+        "*://*.liberation.fr/*",
+        "*://*.france24.com/*",
+        "*://*.lexpress.fr/*"
+      ],
+      "js": ["content/frenchNewsConsentHandler.js"],
+      "run_at": "document_end",
+      "all_frames": true
+    },
     {
       "matches": ["https://extensionpay.com/*"],
       "js": ["lib/ExtPay.js"],
@@ -28,7 +65,7 @@
     {
       "matches": ["http://*/*", "https://*/*"],
       "js": [
-        "config/features.js",
+        "config/consentPhrases.js","config/universalSelectors.js","config/features.js",
         "utils/timing.js",
         "utils/domHelpers.js",
         "storage/preferences.js",
@@ -38,6 +75,8 @@
         "content/cookiebotHandler.js",
         "content/quantcastHandler.js",
         "content/cookieYesHandler.js",
+        "content/didomiHandler.js",
+        "content/iubendaHandler.js",
         "content/genericConsentHandler.js",
         "engine/ruleEvaluator.js",
         "engine/consentExecutor.js",
@@ -52,9 +91,9 @@
     "default_popup": "ui/popup.html",
     "default_title": "CookieControl",
     "default_icon": {
-      "16": "ui/icons/icon16.png",
-      "48": "ui/icons/icon48.png",
-      "128": "ui/icons/icon128.png"
+      "16": "CookieControl.png",
+      "48": "CookieControl.png",
+      "128": "CookieControl.png"
     }
   }
 }

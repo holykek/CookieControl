@@ -7,7 +7,6 @@ const GLOBAL_RULES_KEY = 'cookieControl_globalRules';
 const DOMAIN_RULES_KEY = 'cookieControl_domainRules';
 const LOG_KEY = 'cookieControl_actionLog';
 const PRO_KEY = 'cookieControl_pro';
-
 const RULE_SETS = {
   essential: { essential: true, functional: false, analytics: false, marketing: false },
   'accept-all': { essential: true, functional: true, analytics: true, marketing: true },

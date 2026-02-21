@@ -30,6 +30,8 @@
         (h.name === 'Cookiebot' && ns.isFeatureEnabled('CMP_COOKIEBOT')) ||
         (h.name === 'Quantcast' && ns.isFeatureEnabled('CMP_QUANTCAST')) ||
         (h.name === 'CookieYes' && ns.isFeatureEnabled('CMP_COOKIEYES')) ||
+        (h.name === 'Didomi' && ns.isFeatureEnabled('CMP_DIDOMI')) ||
+        (h.name === 'Iubenda' && ns.isFeatureEnabled('CMP_IUBENDA')) ||
         (h.name === 'Generic' && ns.isFeatureEnabled('CMP_GENERIC'));
       if (!enabled) continue;
       try {
