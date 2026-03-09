@@ -9,6 +9,28 @@
 
   function hasConsentLikeText(doc) {
     if (!doc || !doc.body) return false;
+    var t = (doc.body.innerText || '').toLowerCase();
+    if (t.length > 50000) t = t.slice(0, 50000);
+    var strongConsent = /\b(cookie|cookies|consent|gdpr|kakor|eväste|evasteet|ciasteczka|koekjes|galletas|biscotti|slapukai|sīkdatnes|integritet|samtycke|onetrust|cookiebot|didomi|termly|cookieyes)\b/i.test(t);
+    if (!strongConsent) {
+      var dialogs = doc.body.querySelectorAll('[role="dialog"], [role="alertdialog"]');
+      for (var d = 0; d < dialogs.length; d++) {
+        var dialog = dialogs[d];
+        if (!dialog.querySelectorAll) continue;
+        var btns = dialog.querySelectorAll('button, [role="button"]');
+        var hasAccept = false, hasReject = false, hasSave = false;
+        for (var b = 0; b < btns.length; b++) {
+          var lbl = (btns[b].textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+          if (/^(agree|accept|allow|ok|yes|consent)$/.test(lbl) || /\b(agree|accept|allow|accept all)\b/.test(lbl) && lbl.length < 35) hasAccept = true;
+          if (/^(reject|decline|refuse|deny|no)$/.test(lbl) || /\b(reject|decline|refuse|do not consent)\b/.test(lbl) && lbl.length < 35) hasReject = true;
+          if (/^(confirm|save)$/.test(lbl) || /\b(confirm|save preferences|save choices)\b/.test(lbl) && lbl.length < 35) hasSave = true;
+        }
+        if ((hasAccept && (hasReject || hasSave)) || (hasAccept && btns.length >= 2)) return true;
+      }
+      var dataChoice = /\b(your data\b.*\byour choice\b|\bdata privacy\s*settings\b|\bpersonal data\b.*\bpartners\b)/i.test(t);
+      if (dataChoice) return true;
+      if (/\bpersonal data\b/i.test(t) && /\b(essential|accept|confirm|functionality|analytics|advertising)\b/i.test(t)) return true;
+    }
     var U = (typeof window !== 'undefined' && window.CookieControlUniversal) || (typeof self !== 'undefined' && self.CookieControlUniversal);
     if (U && U.CONTAINER_SELECTORS) {
       try {
@@ -31,10 +53,7 @@
         }
       } catch (e) {}
     }
-    var t = (doc.body.innerText || '') + ' ' + (doc.head && doc.head.innerText || '');
-    var P = (typeof window !== 'undefined' && window.CookieControlPhrases) || (typeof self !== 'undefined' && self.CookieControlPhrases);
-    if (P && P.hasConsentLikeText) return P.hasConsentLikeText(t);
-    return P && P.getConsentDetectRegex ? P.getConsentDetectRegex().test(t) : /privacy|cookie|consent|gdpr|accept|reject|essential|akzeptieren|datenschutz|données|paramètres/i.test(t.toLowerCase());
+    return strongConsent;
   }
 
   function getPreference(cb) {
@@ -167,14 +186,19 @@
       return true;
     }
 
-    var consentHints = ['cookie', 'consent', 'gdpr', 'privacy', 'banner', 'notice', 'truste', 'onetrust', 'iubenda', 'didomi', 'sp_cc', 'sp-cc', 'choice', 'preference', 'datenschutz', 'galletas', 'biscotti', 'kakor', 'données', 'paramètre', 'integritet', 'samtycke', 'eväste', 'ciasteczka', 'koekjes', 'çerez', 'slapukai', 'sīkdatnes', 'küpsised', 'piškotki', 'kolačići', 'biskotat', '쿠키', 'クッキー', '饼干', 'คุกกี้'];
+    var consentHints = ['cookie', 'consent', 'gdpr', 'truste', 'onetrust', 'iubenda', 'didomi', 'sp_cc', 'sp-cc', 'cookiebot', 'termly', 'cookieyes', 'datenschutz', 'galletas', 'biscotti', 'kakor', 'integritet', 'samtycke', 'eväste', 'evasteet', 'ciasteczka', 'koekjes', 'çerez', 'slapukai', 'sīkdatnes', 'küpsised', 'piškotki', 'kolačići', 'biskotat', 'sourcepoint', 'dialog', 'modal', 'banner', 'privacy', 'preference', 'personal', 'overlay', 'popup', 'complydog'];
     function inConsentContext(el) {
       var node = el;
       for (var u = 0; u < 15 && node && node !== doc.body; u++) {
         var c = (node.className && String(node.className)) || '';
         var id = (node.id || '');
-        var s = (c + ' ' + id).toLowerCase();
+        var role = (node.getAttribute && node.getAttribute('role')) || '';
+        var s = (c + ' ' + id + ' ' + role).toLowerCase();
         if (consentHints.some(function (h) { return s.indexOf(h) !== -1; })) return true;
+        var txt = (node.textContent || '').toLowerCase();
+        if (txt.length > 0 && txt.length < 4000 && /\bpersonal data\b/.test(txt) && /\b(essential|accept|confirm|functionality|analytics|advertising)\b/.test(txt)) return true;
+        if (txt.length > 0 && txt.length < 4000 && /\bwe use personal data\b/.test(txt)) return true;
+        if (txt.length > 0 && txt.length < 2000 && /\buses cookies\b/.test(txt) && /\b(allow all|accept|essential|website)\b/.test(txt)) return true;
         node = node.parentElement;
       }
       return false;
@@ -182,9 +206,11 @@
 
     function safeToClick(el) {
       var tag = (el.tagName || '').toUpperCase();
+      if (tag === 'A') return false;
+      var target = el.getAttribute && el.getAttribute('target');
+      if (target === '_blank' || (target && target.toLowerCase() === '_blank')) return false;
       var role = el.getAttribute && el.getAttribute('role');
-      if (tag === 'BUTTON' || role === 'button') return true;
-      return false;
+      return (tag === 'BUTTON' || role === 'button');
     }
 
     function doClick(el) {
@@ -200,18 +226,20 @@
     }
 
     var P = (typeof window !== 'undefined' && window.CookieControlPhrases) || (typeof self !== 'undefined' && self.CookieControlPhrases);
-    var rejectPhrases = (P && P.REJECT_PHRASES) ? P.REJECT_PHRASES : ['reject all', 'refuse all', 'reject', 'decline', 'essential only', 'tout refuser', 'ablehnen', 'rechazar', 'rifiuta', 'odmítnout', 'hylkää', 'avvisa', '거부', '拒绝', '拒否', 'رفض'];
+    var rejectPhrases = (P && P.REJECT_PHRASES) ? P.REJECT_PHRASES : ['do not consent', 'don\'t consent', 'reject all', 'refuse all', 'reject', 'decline', 'essential only', 'tout refuser', 'ablehnen', 'rechazar', 'rifiuta', 'odmítnout', 'hylkää', 'avvisa', '거부', '拒绝', '拒否', 'رفض'];
     var acceptAllPhrases = (P && P.ACCEPT_PHRASES) ? P.ACCEPT_PHRASES.filter(function (p) { return /all|tous|alle|tutti|todo|todos|vše|όλων|全部|모두|ทั้งหมด|tất cả|semua|सभी|הכל|الكل|kaikki/i.test(p); }) : ['accept all', 'allow all', 'alle akzeptieren', 'tout accepter', 'aceptar todo', 'accetta tutti', 'godkänn allt', 'hyväksy kaikki', 'přijmout vše', '모두 수락', '接受全部', 'すべて受け入れる', 'tümünü kabul et', 'قبول الكل'];
     if (!acceptAllPhrases.length) acceptAllPhrases = ['accept all', 'allow all', 'tout accepter', 'aceptar todo', 'hyväksy kaikki', '모두 수락', '接受全部'];
-    var acceptPhrases = (P && P.ACCEPT_PHRASES) ? P.ACCEPT_PHRASES : ['accept all', 'allow all', 'accept', 'agree', 'akzeptieren', 'tout accepter', 'accepter', 'aceptar todo', 'aceptar', 'accetta', 'hyväksy', 'godkänn', 'accepteer', 'přijmout', 'souhlasím', '수락', '接受', '同意', '受け入れる', 'قبول', 'kabul'];
+    var acceptPhrases = (P && P.ACCEPT_PHRASES) ? P.ACCEPT_PHRASES : ['accept all', 'allow all', 'accept', 'agree', 'consent', 'akzeptieren', 'tout accepter', 'accepter', 'aceptar todo', 'aceptar', 'accetta', 'hyväksy', 'godkänn', 'accepteer', 'přijmout', 'souhlasím', '수락', '接受', '同意', '受け入れる', 'قبول', 'kabul'];
 
-    function findByText(phraseList) {
-      const all = doc.body ? doc.body.querySelectorAll('button, [role="button"]') : [];
-      for (let i = 0; i < all.length; i++) {
-        const el = all[i];
+    function findByText(phraseList, excludeIfReject, nodesList) {
+      var list = (nodesList && nodesList.length) ? nodesList : (doc.body ? doc.body.querySelectorAll('button, [role="button"]') : []);
+      for (let i = 0; i < list.length; i++) {
+        const el = list[i];
         if (!el) continue;
+        if (!inConsentContext(el)) continue;
         const t = textOf(el);
         if (t.length < 3 || t.length > 80) continue;
+        if (excludeIfReject && rejectPhrases.some(function (p) { return t.indexOf(p) !== -1; })) continue;
         if (phraseList.some(function (p) { return t.indexOf(p) !== -1; })) {
           if (doClick(el)) return true;
         }
@@ -220,35 +248,18 @@
     }
 
     var U = (typeof window !== 'undefined' && window.CookieControlUniversal) || (typeof self !== 'undefined' && self.CookieControlUniversal);
-    if (U && U.CONTAINER_SELECTORS && U.isAcceptByAttributes && U.isRejectByAttributes && U.getButtonsByPosition) {
+    if (U && U.CONTAINER_SELECTORS && U.isAcceptByAttributes && U.isRejectByAttributes) {
       try {
         var structContainers = doc.body.querySelectorAll(U.CONTAINER_SELECTORS);
         for (var sc = 0; sc < structContainers.length; sc++) {
           var scope = structContainers[sc];
           if (!visible(scope)) continue;
           var btns = scope.querySelectorAll('button, [role="button"]');
-          var visBtns = [];
-          for (var bi = 0; bi < btns.length; bi++) {
-            if (visible(btns[bi])) visBtns.push(btns[bi]);
-          }
-          if (visBtns.length < 2) continue;
           var target = null;
-          if (essential && !forceAccept) {
-            for (var ri = 0; ri < visBtns.length; ri++) {
-              if (U.isRejectByAttributes(visBtns[ri])) { target = visBtns[ri]; break; }
-            }
-            if (!target) {
-              var pair = U.getButtonsByPosition(visBtns);
-              target = pair.reject;
-            }
-          } else {
-            for (var ai = 0; ai < visBtns.length; ai++) {
-              if (U.isAcceptByAttributes(visBtns[ai])) { target = visBtns[ai]; break; }
-            }
-            if (!target) {
-              var pair2 = U.getButtonsByPosition(visBtns);
-              target = pair2.accept;
-            }
+          for (var bi = 0; bi < btns.length; bi++) {
+            if (!visible(btns[bi])) continue;
+            if (essential && !forceAccept && U.isRejectByAttributes(btns[bi])) { target = btns[bi]; break; }
+            if ((forceAccept || !essential) && U.isAcceptByAttributes(btns[bi])) { target = btns[bi]; break; }
           }
           if (target && doClick(target)) {
             setCooldown();
@@ -262,11 +273,13 @@
     for (let pass = 0; pass < 2; pass++) {
       const useAcceptAllOnly = (pass === 0) && (forceAccept || !essential);
     for (let i = 0; i < nodes.length; i++) {
+      if (!inConsentContext(nodes[i])) continue;
       const t = textOf(nodes[i]);
       if (forceAccept || !essential) {
         const matchesAccept = acceptPhrases.some(function (p) { return t.indexOf(p) !== -1; });
+        const matchesReject = rejectPhrases.some(function (p) { return t.indexOf(p) !== -1; });
         const matchesAcceptAll = acceptAllPhrases.some(function (p) { return t.indexOf(p) !== -1; });
-        if (matchesAccept && t.length < 80 && (!useAcceptAllOnly || matchesAcceptAll)) {
+        if (matchesAccept && !matchesReject && t.length < 80 && (!useAcceptAllOnly || matchesAcceptAll)) {
           if (doClick(nodes[i])) {
             setCooldown();
             clicked = true;
@@ -286,18 +299,19 @@
     }
     }
     if (forceAccept || !essential) {
-      if (findByText(acceptPhrases.slice(0, 25))) {
+      if (findByText(acceptPhrases.slice(0, 25), true, nodes)) {
         setCooldown();
         clicked = true;
         return true;
       }
     } else {
-      if (findByText(rejectPhrases.slice(0, 25))) {
+      if (findByText(rejectPhrases.slice(0, 25), false, nodes)) {
         setCooldown();
         clicked = true;
         return true;
       }
-      if (findByText(acceptPhrases.slice(0, 15))) {
+      var savePhrases = (P && P.SAVE_PHRASES) ? P.SAVE_PHRASES : ['save', 'confirm', 'save preferences', 'save choices', 'save settings', 'confirm choices', 'bekräfta', 'bevestigen', 'conferma', 'guardar', 'enregistrer', 'valider'];
+      if (findByText(savePhrases, false, nodes)) {
         setCooldown();
         clicked = true;
         return true;
@@ -306,8 +320,16 @@
     return false;
   }
 
+  function shouldSkipHost() {
+    try {
+      var h = (typeof location !== 'undefined' && (location.hostname || '')) || '';
+      h = h.toLowerCase();
+      return /^(.+\.)?google\.(com|co\.\w{2,})$/.test(h) || /^(.+\.)?bing\.com$/.test(h) || /^(.+\.)?duckduckgo\.com$/.test(h);
+    } catch (e) { return false; }
+  }
+
   function run() {
-    if (clicked || attempts >= MAX_ATTEMPTS) return;
+    if (clicked || attempts >= MAX_ATTEMPTS || shouldSkipHost()) return;
     attempts++;
     getPreference(function (essential) {
       if (tryClick(essential)) clearInterval(interval);

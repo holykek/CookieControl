@@ -11,26 +11,32 @@
   var REJECT_ACTIONS = ['reject-all', 'reject_all', 'rejectall', 'reject-all-cookies', 'reject', 'decline', 'decline-all'];
 
   /** ID substring patterns — many CMPs use English IDs regardless of UI language */
-  var ACCEPT_ID_PATTERNS = ['accept', 'allow', 'allowall', 'optin', 'agree'];
+  var ACCEPT_ID_PATTERNS = ['accept', 'allow', 'allowall', 'optin', 'agree', 'acceptall'];
   var REJECT_ID_PATTERNS = ['reject', 'decline', 'refuse', 'deny', 'optout', 'essential'];
 
   /** Class substring patterns — CMP-specific, same across locales */
-  var ACCEPT_CLASS_PATTERNS = ['accept', 'allow', 'optin', 'agree', 'consent-all'];
+  var ACCEPT_CLASS_PATTERNS = ['accept', 'allow', 'optin', 'agree', 'consent-all', 'accept-all', 'acceptall'];
   var REJECT_CLASS_PATTERNS = ['reject', 'decline', 'refuse', 'deny', 'optout', 'essential-only'];
 
-  /** Container selectors — CMPs use these class/id patterns in all languages */
+  /** Container selectors — any banner/modal that could be consent (all languages, all CMPs) */
   var CONTAINER_SELECTORS = [
     '[role="dialog"]', '[role="alertdialog"]',
     '[id*="cookie"]', '[class*="cookie"]', '[id*="consent"]', '[class*="consent"]',
-    '[id*="gdpr"]', '[class*="gdpr"]', '[id*="privacy"]', '[class*="privacy"]',
-    '[class*="banner"]', '[class*="modal"]', '[class*="popup"]',
+    '[id*="gdpr"]', '[class*="gdpr"]',
     '[id*="onetrust"]', '[class*="onetrust"]', '[id*="Cookiebot"]', '[class*="CybotCookiebot"]',
     '[id*="didomi"]', '[class*="didomi"]', '[class*="termly"]', '[class*="cookieyes"]',
     '[class*="cky-consent"]', '[class*="qc-cmp"]', '[class*="truste"]',
     '[class*="sp_message"]', '[class*="sp_cc"]', '[class*="sourcepoint"]',
-    '[class*="cookie-banner"]', '[class*="cookie-notice"]', '[class*="cc-banner"]',
+    '[class*="cookie-banner"]', '[class*="cookie-notice"]', '[class*="cc-banner"]', '[class*="gdpr-cookie"]',
     '[class*="kakor"]', '[id*="kakor"]', '[class*="integritet"]', '[class*="samtycke"]',
-    '[class*="ciasteczka"]', '[class*="eväste"]', '[class*="koekjes"]'
+    '[class*="ciasteczka"]', '[class*="eväste"]', '[class*="evasteet"]', '[class*="koekjes"]',
+    '[class*="banner"]', '[id*="banner"]', '[class*="modal"]', '[id*="modal"]',
+    '[class*="overlay"]', '[class*="popup"]', '[class*="privacy"]', '[id*="privacy"]',
+    '[class*="preference"]', '[id*="preference"]', '[class*="personal-data"]', '[class*="personaldata"]',
+    '[class*="cc-"]', '[class*="cmp-"]', '[class*="consent-modal"]', '[class*="consent-banner"]',
+    '[aria-label*="cookie" i]', '[aria-label*="consent" i]', '[aria-label*="privacy" i]',
+    '[data-testid*="cookie"]', '[data-testid*="consent"]', '[data-testid*="banner"]',
+    '[class*="civic"]', '[class*="osano"]', '[class*="klaro"]', '[class*="complydog"]', '[id*="complydog"]'
   ].join(', ');
 
   function matchesPattern(str, patterns) {

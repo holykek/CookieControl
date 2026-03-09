@@ -96,6 +96,8 @@
   function safeClick(el) {
     if (!isClickable(el)) return false;
     if ((el.tagName || '').toUpperCase() === 'A') return false;
+    var target = el.getAttribute && el.getAttribute('target');
+    if (target === '_blank' || (target && target.toLowerCase() === '_blank')) return false;
     if (wouldNavigate(el)) return false;
     try {
       el.click();

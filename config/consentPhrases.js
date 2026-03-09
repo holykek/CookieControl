@@ -53,12 +53,16 @@
     'accept all', 'reject all', 'allow all', 'refuse all', 'essential only',
     'manage', 'save & exit', 'make a choice', 'personalised', 'truste', 'onetrust',
     'iubenda', 'didomi', 'cookiebot', 'quantcast', 'sourcepoint', 'sp_cc', 'sp-cc',
-    'value your privacy', 'technology partner', 'you\'re in control', 'purposes', 'vendors'
+    'value your privacy', 'technology partner', 'you\'re in control', 'purposes', 'vendors',
+    'personal data', 'personal information', 'essential purposes', 'functionality', 'analytics', 'advertising',
+    'sale of personal', 'we use personal data', 'provide a good experience', 'connect you with',
+    'banner', 'modal', 'preference', 'preferences',
+    'uses cookies', 'use cookies', 'complydog', 'cookie checker'
   ];
 
   /** Accept/agree button text — many languages. */
   var ACCEPT_PHRASES = [
-    'accept all', 'allow all', 'accept', 'agree', 'allow', 'ok', 'yes', 'continue',
+    'accept all', 'allow all', 'accept', 'agree', 'allow', 'ok', 'yes', 'continue', 'consent',
     'i accept', 'i agree', 'accept all cookies', 'accept cookies', 'allow all cookies',
     'alle akzeptieren', 'akzeptieren', 'zustimmen', 'alle zustimmen',
     'tout accepter', 'accepter tout', 'j\'accepte', 'accepter', 'j’accepte',
@@ -101,7 +105,7 @@
 
   /** Reject/refuse/essential-only button text — 60+ languages. */
   var REJECT_PHRASES = [
-    'reject all', 'refuse all', 'decline all', 'essential only', 'necessary only',
+    'do not consent', 'don\'t consent', 'do not agree', 'reject all', 'refuse all', 'decline all', 'essential only', 'necessary only',
     'essential cookies only', 'reject', 'refuse', 'decline', 'no thanks', 'deny',
     'alle ablehnen', 'ablehnen', 'nur notwendige',
     'tout refuser', 'refuser tout', 'refuser', 'continuer sans accepter', 'seulement essentiels',
@@ -187,16 +191,16 @@
 
   /** Settings/manage button text — many languages. */
   var SETTINGS_PHRASES = [
-    'välj nivå', 'hantera cookies', 'hantera kakor', 'manage cookies', 'manage preferences',
+    'välj nivå', 'hantera cookies', 'hantera kakor', 'manage cookies', 'manage preferences', 'manage settings',
     'inställningar', 'preferenser', 'settings', 'customize', 'valinnat', 'asetukset',
     'voorkeuren', 'impostazioni', 'preferenze', 'paramètres', 'gérer les cookies'
   ];
 
   /** DOM hints (class/id/role) for consent containers. */
   var HINTS = [
-    'cookie', 'consent', 'privacy', 'gdpr', 'banner', 'notice', 'preference',
+    'cookie', 'consent', 'privacy', 'gdpr', 'banner', 'notice', 'preference', 'modal', 'overlay',
     'truste', 'onetrust', 'iubenda', 'iab', 'sourcepoint', 'sp_cc', 'sp-cc',
-    'value', 'sp_message', 'choose', 'personalised', 'essential', 'reject', 'accept',
+    'value', 'sp_message', 'choose', 'personalised', 'essential', 'reject', 'accept', 'personal', 'complydog',
     'einstellungen', 'spiegel', 'figaro', 'partenaires', 'données',
     'kakor', 'integritet', 'samtycke', 'inställningar', 'voorkeuren', 'välj nivå',
     'cookies', 'galletas', 'biscotti', 'ciasteczka', 'evästeet', 'evasteet',

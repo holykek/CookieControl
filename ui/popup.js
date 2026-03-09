@@ -71,11 +71,9 @@ function renderUpgradeView() {
       const isPro = !!result[PRO_KEY];
       const msg = document.getElementById('pro-status-msg');
       const buyBtn = document.getElementById('buy-pro');
-      const unlockBtn = document.getElementById('unlock-pro');
       const loginHint = document.getElementById('pro-login-hint');
       if (msg) msg.textContent = isPro ? 'You have Pro.' : '';
       if (buyBtn) buyBtn.classList.toggle('hidden', isPro);
-      if (unlockBtn) unlockBtn.classList.toggle('hidden', isPro);
       if (loginHint) loginHint.classList.toggle('hidden', isPro);
     });
   });
@@ -108,15 +106,6 @@ function setupUpgrade() {
       } else {
         window.close();
       }
-    });
-  }
-  const unlockBtn = document.getElementById('unlock-pro');
-  if (unlockBtn) {
-    unlockBtn.addEventListener('click', () => {
-      chrome.storage.local.set({ [PRO_KEY]: true }, () => {
-        updatePlanBadge();
-        renderUpgradeView();
-      });
     });
   }
 }

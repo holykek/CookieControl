@@ -33,7 +33,7 @@
   const BANNER_HINTS = P && P.HINTS ? BANNER_HINTS_BASE.concat(P.HINTS) : BANNER_HINTS_BASE;
 
   const REJECT_PHRASES_BASE = [
-    'i do not agree', 'do not agree', 'non accetto', 'non sono d\'accordo', 'non agree',
+    'do not consent', 'don\'t consent', 'do not agree', 'i do not agree', 'do not agree', 'non accetto', 'non sono d\'accordo', 'non agree',
     'neka allt', 'godkänn endast nödvändiga', 'reject all', 'decline all', 'avvisa alla', 'deny all', 'refuse all',
     'reject and purchase', 'reject', 'decline', 'essential cookies only', 'only essential', 'essential only', 'necessary only',
     'strictly necessary', 'no thanks', 'deny', 'refuse', 'alle ablehnen',
@@ -59,7 +59,7 @@
 
   const SETTINGS_PHRASES_BASE = [
     'välj nivå', 'hantera cookies', 'hantera kakor', 'inställningar', 'preferenser',
-    'settings', 'customize', 'anpassa', 'manage cookies', 'manage preferences',
+    'settings', 'customize', 'anpassa', 'manage cookies', 'manage preferences', 'manage settings',
     'cookie preferences', 'preferences', 'gestion des cookies',
     'valinnat', 'asetukset', 'voorkeuren', 'impostazioni', 'preferenze', 'impostazioni cookie',
     'definições', 'preferências', 'nastavení', 'välj cookies',
@@ -70,7 +70,7 @@
   const SETTINGS_PHRASES = P && P.SETTINGS_PHRASES ? SETTINGS_PHRASES_BASE.concat(P.SETTINGS_PHRASES) : SETTINGS_PHRASES_BASE;
 
   const ACCEPT_PHRASES_BASE = [
-    'godkänn allt', 'accept all', 'allow all', 'acceptera alla', 'agree to all',
+    'consent', 'godkänn allt', 'accept all', 'allow all', 'acceptera alla', 'agree to all',
     'i accept', 'accept', 'agree', 'allow', 'accept all cookies', 'accept cookies',
     'alle akzeptieren', 'akzeptieren', 'zustimmen',
     'i agree', 'tout accepter', 'aceptar todo', 'accept and close',
@@ -152,7 +152,7 @@
     return list;
   }
 
-  /** Language-agnostic: find Accept button by data-action, ID, class, or position. */
+  /** Language-agnostic: find Accept button by data-action, ID, or class (no position heuristic). */
   function findAcceptByStructure(scope) {
     if (!scope) return null;
     const btns = getAllButtons(scope);
@@ -160,24 +160,16 @@
       if (!visible(el)) continue;
       if (U && U.isAcceptByAttributes && U.isAcceptByAttributes(el)) return el;
     }
-    if (U && U.getButtonsByPosition && btns.length >= 2) {
-      const pair = U.getButtonsByPosition(btns.filter(visible));
-      return pair.accept || null;
-    }
     return null;
   }
 
-  /** Language-agnostic: find Reject button by data-action, ID, class, or position. */
+  /** Language-agnostic: find Reject button by data-action, ID, or class (no position heuristic). */
   function findRejectByStructure(scope) {
     if (!scope) return null;
     const btns = getAllButtons(scope);
     for (const el of btns) {
       if (!visible(el)) continue;
       if (U && U.isRejectByAttributes && U.isRejectByAttributes(el)) return el;
-    }
-    if (U && U.getButtonsByPosition && btns.length >= 2) {
-      const pair = U.getButtonsByPosition(btns.filter(visible));
-      return pair.reject || null;
     }
     return null;
   }
@@ -223,17 +215,17 @@
     }
     const candidates = root.querySelectorAll(
       '[class*="cookie"], [id*="cookie"], [class*="consent"], [id*="consent"], ' +
-      '[class*="gdpr"], [role="dialog"], [role="alertdialog"], [class*="banner"], [class*="cookie-notice"], ' +
-      '[class*="termly"], [class*="cookieyes"], [class*="cookiebot"], [class*="cookie-law"], [data-testid*="cookie"], ' +
-      '[class*="kakor"], [id*="kakor"], [class*="integritet"], [class*="samtycke"], ' +
-      '[class*="cookie-widget"], [class*="cc-banner"], [class*="cookie-banner"], [class*="gdpr-cookie"], ' +
-      '[class*="didomi"], [id*="didomi"], [class*="privacy"], [id*="privacy"], [class*="bbccookies"], [class*="consent-modal"], [class*="truste"], [id*="truste"], [class*="onetrust"], ' +
-      '[class*="choose"], [class*="personalised"], [class*="essential"], [class*="civic"], [class*="osano"], [class*="klaro"]'
+      '[class*="gdpr"], [id*="gdpr"], [class*="cookie-notice"], [class*="termly"], [class*="cookieyes"], ' +
+      '[class*="cookiebot"], [class*="cookie-law"], [data-testid*="cookie"], [class*="kakor"], [id*="kakor"], ' +
+      '[class*="integritet"], [class*="samtycke"], [class*="cookie-widget"], [class*="cc-banner"], ' +
+      '[class*="cookie-banner"], [class*="gdpr-cookie"], [class*="didomi"], [id*="didomi"], [class*="bbccookies"], ' +
+      '[class*="consent-modal"], [class*="truste"], [id*="truste"], [class*="onetrust"], [class*="civic"], [class*="osano"], [class*="klaro"], ' +
+      '[class*="banner"], [id*="banner"], [class*="modal"], [id*="modal"], [class*="privacy"], [id*="privacy"], [class*="preference"], [class*="overlay"]'
     );
     for (const el of candidates) {
       if (!visible(el)) continue;
       if (isLikelyConsentContainer(el)) return el;
-      const parent = el.closest && el.closest('[class*="cookie"], [class*="consent"], [role="dialog"]');
+      const parent = el.closest && el.closest('[class*="cookie"], [class*="consent"], [class*="gdpr"]');
       if (parent && visible(parent)) return parent;
     }
     const allButtons = getAllButtons(root);
@@ -269,6 +261,9 @@
       'cookie policy', 'politique de confidentialité', 'accept our use', 'accept cookies',
       'we value your privacy', 'how and why we process', 'iab partners', 'manage cookies',
       'choose how to use', 'personalised ads', 'dailymail', 'reject and purchase',
+      'personal data', 'we use personal data', 'essential purposes', 'functionality', 'analytics', 'advertising',
+      'sale of personal', 'provide a good experience', 'confirm', 'accept all',
+      'uses cookies', 'use cookies', 'complydog', 'as an essential part',
     ];
     const clickables = 'button, a, [role="button"], [class*="didomi-button"], [class*="didomi-cta"], [class*="button"]';
     for (const el of root.querySelectorAll('*')) {
@@ -414,7 +409,7 @@
   }
 
   /** Exact primary accept labels (fallback for phrase matching). */
-  var ACCEPT_EXACT = ['yes, i agree', 'i agree', 'i accept', 'accetta', 'accept all', 'allow all'];
+  var ACCEPT_EXACT = ['yes, i agree', 'i agree', 'i accept', 'accetta', 'accept all', 'allow all', 'consent'];
   function findAcceptButton(root) {
     const scope = root || document.body;
     var byStructure = findAcceptByStructure(scope);
@@ -425,6 +420,7 @@
     for (const el of candidates) {
       if (!visible(el)) continue;
       const t = text(el);
+      if (REJECT_PHRASES.some((p) => t.includes(p))) continue;
       if (!ACCEPT_PHRASES.some((p) => t.includes(p)) && !isYesButton(t)) continue;
       // Strong boost for exact primary labels so we click the real CTA
       var exactMatch = ACCEPT_EXACT.some(function (phrase) {
@@ -439,15 +435,18 @@
     return best;
   }
 
-  /** True if el or an ancestor (up to body) has cookie/consent/privacy in class, id, or text. */
+  /** True if el or an ancestor (up to body) has cookie/consent/dialog in class, id, role, or text. */
   function isInConsentContext(el, maxAncestors) {
     if (!el) return false;
-    const hints = ['cookie', 'consent', 'privacy', 'gdpr', 'banner', 'notice', 'preference', 'truste', 'onetrust', 'iab', 'reuters', 'value'];
+    const hints = ['cookie', 'consent', 'privacy', 'gdpr', 'banner', 'notice', 'preference', 'truste', 'onetrust', 'iab', 'reuters', 'value', 'dialog', 'alertdialog', 'modal', 'overlay', 'personal', 'complydog'];
     let node = el;
     let up = (maxAncestors || 15);
     while (node && up-- > 0) {
-      const str = ((node.className && node.className.toString()) + ' ' + (node.id || '') + ' ' + (node.textContent || '').slice(0, 400)).toLowerCase();
+      const role = (node.getAttribute && node.getAttribute('role')) || '';
+      const str = ((node.className && node.className.toString()) + ' ' + (node.id || '') + ' ' + role + ' ' + (node.textContent || '').slice(0, 400)).toLowerCase();
       if (hints.some((h) => str.includes(h))) return true;
+      const txt = (node.textContent || '').toLowerCase();
+      if (txt.length > 0 && txt.length < 2000 && /\buses cookies\b/.test(txt) && /\b(allow all|accept|essential|website)\b/.test(txt)) return true;
       node = node.parentElement;
     }
     return false;

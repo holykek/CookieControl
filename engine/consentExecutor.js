@@ -5,8 +5,8 @@
 (function () {
   const ns = window.CookieControl || {};
 
-  /** Domains where we skip consent automation (e.g. CMP not yet supported). */
-  const SKIP_DOMAINS = ['expressen.se', 'www.expressen.se'];
+  /** Domains where we skip consent automation (avoid false clicks on Share etc.). */
+  const SKIP_DOMAINS = ['expressen.se', 'www.expressen.se', 'google.com', 'www.google.com', 'google.co.uk', 'google.de', 'google.fr', 'bing.com', 'duckduckgo.com'];
 
   function shouldSkipDomain(hostname) {
     if (!hostname) return false;
@@ -83,7 +83,8 @@
       if (ns.delay) await ns.delay(intervalMs);
     }
 
-    if (!lastResult.success && typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+    var hostname = (window.location && window.location.hostname) || '';
+    if (!lastResult.success && !shouldSkipDomain(hostname) && typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
       try {
         const ruleSet = ns.getRuleSetForPage ? await ns.getRuleSetForPage() : { essential: true, functional: false, analytics: false, marketing: false };
         const essentialOnly = ruleSet && ruleSet.essential === true && !(ruleSet.functional || ruleSet.analytics || ruleSet.marketing);

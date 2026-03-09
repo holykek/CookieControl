@@ -4,6 +4,9 @@
  * Note: importScripts of consentPhrases.js can cause status 15 in some Chrome builds;
  * we use built-in fallbacks for the injected all-frames clicker. Full phrases run in content scripts.
  */
+try {
+  importScripts('../config/extpay.js', '../lib/ExtPay.js');
+} catch (e) {}
 
 /** Run in page context to apply Didomi consent via API (closes banner without clicking). */
 function didomiApplyInPage(essential) {
@@ -99,13 +102,16 @@ function clickConsentInFrame(essential, acceptPhrasesArg, rejectPhrasesArg, save
         if (k && typeof sessionStorage !== 'undefined') sessionStorage.setItem('CookieControl_cooldown', Date.now() + '|' + k);
       } catch (_) {}
     }
-    var acceptPhrases = acceptPhrasesArg && acceptPhrasesArg.length ? acceptPhrasesArg : ['accept all', 'allow all', 'accept', 'agree', 'akzeptieren', 'tout accepter', 'accepter et continuer', 'accepter', 'aceptar', 'godkänn alla', 'godkänn allt', 'ok'];
-    var rejectPhrases = rejectPhrasesArg && rejectPhrasesArg.length ? rejectPhrasesArg : ['reject all', 'refuse all', 'essential only', 'reject', 'refuse', 'ablehnen', 'tout refuser', 'godkänn endast nödvändiga', 'endast nödvändiga', 'avvisa alla'];
+    var acceptPhrases = acceptPhrasesArg && acceptPhrasesArg.length ? acceptPhrasesArg : ['accept all', 'allow all', 'accept', 'agree', 'consent', 'akzeptieren', 'tout accepter', 'accepter et continuer', 'accepter', 'aceptar', 'godkänn alla', 'godkänn allt', 'ok'];
+    var rejectPhrases = rejectPhrasesArg && rejectPhrasesArg.length ? rejectPhrasesArg : ['do not consent', 'don\'t consent', 'reject all', 'refuse all', 'essential only', 'reject', 'refuse', 'ablehnen', 'tout refuser', 'godkänn endast nödvändiga', 'endast nödvändiga', 'avvisa alla'];
     var savePhrases = savePhrasesArg && savePhrasesArg.length ? savePhrasesArg : ['save', 'confirm', 'spara', 'enregistrer', 'valider'];
-    var hints = hintsArg && hintsArg.length ? hintsArg : ['cookie', 'consent', 'privacy', 'gdpr', 'banner', 'truste', 'onetrust', 'iubenda', 'sourcepoint', 'kakor', 'integritet', 'samtycke'];
+    var hints = hintsArg && hintsArg.length ? hintsArg : ['cookie', 'consent', 'gdpr', 'truste', 'onetrust', 'iubenda', 'sourcepoint', 'cookiebot', 'didomi', 'termly', 'cookieyes', 'kakor', 'integritet', 'samtycke', 'dialog', 'alertdialog', 'banner', 'modal', 'privacy', 'preference', 'overlay', 'personal', 'complydog'];
     var consentDetect = consentDetectArg && consentDetectArg.length ? consentDetectArg : ['cookie', 'privacy', 'consent', 'gdpr', 'données', 'donnees', 'accepter', 'kakor', 'godkänn'];
     var doc = typeof document !== 'undefined' ? document : null;
     if (!doc || !doc.body) return false;
+    var host = (typeof location !== 'undefined' && (location.hostname || '')) || '';
+    host = host.toLowerCase();
+    if (/google\.(com|co\.\w{2,})$/.test(host) || /bing\.com$/.test(host) || /duckduckgo\.com$/.test(host)) return false;
     var bodyText = (doc.body.innerText || '').toLowerCase();
     var url = (typeof location !== 'undefined' && location.href) || '';
     var isSubscriptionPaywall = /suscripcion|subscription|abonnement|abbonamento|subscribe|inscrição|inscricao|suscribete|abonnieren|€|\$\d|choose.*plan|elige.*modelo|paywall|plan mensual|plan anual|monthly|annual|abonneer|prenumerera|tilaa|会员|구독|สมัครสมาชิก|đăng ký/i.test(bodyText + ' ' + url) &&
@@ -147,6 +153,10 @@ function clickConsentInFrame(essential, acceptPhrasesArg, rejectPhrasesArg, save
         var r = (node.getAttribute && node.getAttribute('role')) || '';
         var s = (c + ' ' + id + ' ' + r).toLowerCase();
         if (hints.some(function (h) { return s.indexOf(h) !== -1; })) return true;
+        var txt = (node.textContent || '').toLowerCase();
+        if (txt.length > 0 && txt.length < 4000 && /\bpersonal data\b/.test(txt) && /\b(essential|accept|confirm|functionality|analytics|advertising)\b/.test(txt)) return true;
+        if (txt.length > 0 && txt.length < 4000 && /\bwe use personal data\b/.test(txt)) return true;
+        if (txt.length > 0 && txt.length < 2000 && /\buses cookies\b/.test(txt) && /\b(allow all|accept|essential|website)\b/.test(txt)) return true;
         node = node.parentElement;
       }
       return false;
@@ -180,6 +190,9 @@ function clickConsentInFrame(essential, acceptPhrasesArg, rejectPhrasesArg, save
     }
     function safeToClick(el) {
       var tag = (el.tagName || '').toUpperCase();
+      if (tag === 'A') return false;
+      var target = el.getAttribute && el.getAttribute('target');
+      if (target === '_blank' || (target && target.toLowerCase() === '_blank')) return false;
       var role = el.getAttribute && el.getAttribute('role');
       return (tag === 'BUTTON' || role === 'button');
     }
@@ -192,20 +205,16 @@ function clickConsentInFrame(essential, acceptPhrasesArg, rejectPhrasesArg, save
         return true;
       } catch (e) { return false; }
     }
-    var CONTAINER_SEL = '[role="dialog"],[role="alertdialog"],[id*="cookie"],[class*="cookie"],[id*="consent"],[class*="consent"],[id*="gdpr"],[class*="gdpr"],[id*="privacy"],[class*="privacy"],[class*="banner"],[id*="onetrust"],[class*="onetrust"],[id*="Cookiebot"],[class*="Cookiebot"],[class*="didomi"],[class*="termly"],[class*="cookieyes"],[class*="cky-consent"],[class*="qc-cmp"],[class*="truste"],[class*="sp_message"]';
+    var CONTAINER_SEL = '[role="dialog"],[role="alertdialog"],[id*="cookie"],[class*="cookie"],[id*="consent"],[class*="consent"],[id*="gdpr"],[class*="gdpr"],[id*="onetrust"],[class*="onetrust"],[id*="Cookiebot"],[class*="Cookiebot"],[class*="didomi"],[class*="termly"],[class*="cookieyes"],[class*="cky-consent"],[class*="qc-cmp"],[class*="truste"],[class*="sp_message"],[class*="cookie-banner"],[class*="cookie-notice"],[class*="kakor"],[class*="banner"],[id*="banner"],[class*="modal"],[id*="modal"],[class*="privacy"],[id*="privacy"],[class*="preference"],[class*="overlay"],[class*="complydog"],[id*="complydog"]';
     var ACCEPT_ACTIONS = ['accept-all','accept_all','acceptall','accept'];
     var REJECT_ACTIONS = ['reject-all','reject_all','rejectall','reject','decline'];
     function isAcceptAttr(el) {
       var a = (el.getAttribute && el.getAttribute('data-action')) || '';
-      if (a && ACCEPT_ACTIONS.indexOf(a.toLowerCase()) !== -1) return true;
-      var s = ((el.id || '') + ' ' + (el.className || '')).toLowerCase();
-      return s.indexOf('accept') !== -1 || s.indexOf('allow') !== -1;
+      return a && ACCEPT_ACTIONS.indexOf(a.toLowerCase()) !== -1;
     }
     function isRejectAttr(el) {
       var a = (el.getAttribute && el.getAttribute('data-action')) || '';
-      if (a && REJECT_ACTIONS.indexOf(a.toLowerCase()) !== -1) return true;
-      var s = ((el.id || '') + ' ' + (el.className || '')).toLowerCase();
-      return s.indexOf('reject') !== -1 || s.indexOf('decline') !== -1 || s.indexOf('refuse') !== -1;
+      return a && REJECT_ACTIONS.indexOf(a.toLowerCase()) !== -1;
     }
     function structClick() {
       try {
@@ -214,18 +223,11 @@ function clickConsentInFrame(essential, acceptPhrasesArg, rejectPhrasesArg, save
           var scope = containers[ci];
           if (!visible(scope)) continue;
           var btns = scope.querySelectorAll('button, [role="button"]');
-          var vis = [];
-          for (var vi = 0; vi < btns.length; vi++) {
-            if (visible(btns[vi])) vis.push(btns[vi]);
-          }
-          if (vis.length < 2) continue;
           var target = null;
-          if (essential && !forceAccept) {
-            for (var ri = 0; ri < vis.length; ri++) { if (isRejectAttr(vis[ri])) { target = vis[ri]; break; } }
-            if (!target) target = vis[0];
-          } else {
-            for (var ai = 0; ai < vis.length; ai++) { if (isAcceptAttr(vis[ai])) { target = vis[ai]; break; } }
-            if (!target) target = vis[vis.length - 1];
+          for (var vi = 0; vi < btns.length; vi++) {
+            if (!visible(btns[vi])) continue;
+            if (essential && !forceAccept && isRejectAttr(btns[vi])) { target = btns[vi]; break; }
+            if ((forceAccept || !essential) && isAcceptAttr(btns[vi])) { target = btns[vi]; break; }
           }
           if (target && safeToClick(target) && doClick(target)) { setCooldown(); return true; }
         }
@@ -252,6 +254,31 @@ function clickConsentInFrame(essential, acceptPhrasesArg, rejectPhrasesArg, save
     } catch (e) { return false; }
     function docHasConsentText() {
       try {
+        var bodyText = (doc.body && doc.body.innerText || '').toLowerCase();
+        if (bodyText.length > 50000) bodyText = bodyText.slice(0, 50000);
+        var strongConsent = /\b(cookie|cookies|consent|gdpr|kakor|eväste|ciasteczka|koekjes|onetrust|cookiebot|didomi|termly|cookieyes)\b/i.test(bodyText);
+        if (!strongConsent) {
+          var dataChoice = /\b(your data\b.*\byour choice\b|\bdata privacy\s*settings\b|\bpersonal data\b.*\bpartners\b)/i.test(bodyText);
+          if (!dataChoice) {
+            if (/\bpersonal data\b/i.test(bodyText) && /\b(essential|accept|confirm|functionality|analytics|advertising)\b/i.test(bodyText)) strongConsent = true;
+            if (!strongConsent) {
+              var dialogs = doc.body.querySelectorAll('[role="dialog"], [role="alertdialog"]');
+              for (var di = 0; di < dialogs.length; di++) {
+                var d = dialogs[di];
+                var btns = d.querySelectorAll('button, [role="button"]');
+                var hasA = false, hasR = false, hasSave = false;
+                for (var bi = 0; bi < btns.length; bi++) {
+                  var lbl = (btns[bi].textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+                  if (/^(agree|accept|allow|ok|consent)$/.test(lbl) || (/\b(agree|accept|accept all)\b/.test(lbl) && lbl.length < 35)) hasA = true;
+                  if (/^(reject|decline|refuse|deny)$/.test(lbl) || (/\b(reject|decline|refuse|do not consent)\b/.test(lbl) && lbl.length < 35)) hasR = true;
+                  if (/^(confirm|save)$/.test(lbl) || /\b(confirm|save preferences)\b/.test(lbl) && lbl.length < 35) hasSave = true;
+                }
+                if ((hasA && (hasR || hasSave)) || (hasA && btns.length >= 2)) { strongConsent = true; break; }
+              }
+            }
+          } else strongConsent = true;
+        }
+        if (!strongConsent) return false;
         var containers = doc.body.querySelectorAll(CONTAINER_SEL);
         for (var dc = 0; dc < containers.length; dc++) {
           var bc = containers[dc];
@@ -266,10 +293,7 @@ function clickConsentInFrame(essential, acceptPhrasesArg, rejectPhrasesArg, save
             if (vc >= 2) return true;
           }
         }
-        var bodyText = (doc.body && doc.body.innerText || '');
-        var headText = (doc.head && doc.head.innerText || '');
-        var fullText = (bodyText + ' ' + headText).toLowerCase();
-        return consentDetect.some(function (w) { return fullText.indexOf(w.toLowerCase()) !== -1; });
+        return strongConsent;
       } catch (e) { return false; }
     }
     var allowContext = docHasConsentText();
@@ -281,6 +305,7 @@ function clickConsentInFrame(essential, acceptPhrasesArg, rejectPhrasesArg, save
     function shouldClickAccept(el) {
       var t = textOf(el);
       if (t.length > 60) return false;
+      if (rejectPhrases.some(function (p) { return t.indexOf(p) !== -1; })) return false;
       return acceptPhrases.some(function (p) { return t.indexOf(p) !== -1 || t === p.trim(); });
     }
     function shouldClickReject(el) {
@@ -288,21 +313,20 @@ function clickConsentInFrame(essential, acceptPhrasesArg, rejectPhrasesArg, save
       if (/purchase|subscribe|buy|pay|suscripción|suscripcion|suscriber|s'abonner|abonnement|abonnieren|abbonamento|pagar|comprar/i.test(t)) return false;
       return rejectPhrases.some(function (p) { return t.indexOf(p) !== -1; });
     }
+    if (!allowContext) return false;
     if (essential && !forceAccept) {
       for (var i = 0; i < nodes.length; i++) {
-        if (shouldClickReject(nodes[i]) && (inConsentContext(nodes[i]) || allowContext) && doClick(nodes[i])) { setCooldown(); return true; }
+        if (inConsentContext(nodes[i]) && shouldClickReject(nodes[i]) && doClick(nodes[i])) { setCooldown(); return true; }
       }
       for (var j = 0; j < nodes.length; j++) {
         var t2 = textOf(nodes[j]);
-        if (savePhrases.some(function (p) { return t2.indexOf(p) !== -1; }) && (inConsentContext(nodes[j]) || allowContext) && doClick(nodes[j])) { setCooldown(); return true; }
+        if (inConsentContext(nodes[j]) && savePhrases.some(function (p) { return t2.indexOf(p) !== -1; }) && doClick(nodes[j])) { setCooldown(); return true; }
       }
     }
     if (forceAccept || !essential) {
       for (var k = 0; k < nodes.length; k++) {
-        if (!shouldClickAccept(nodes[k])) continue;
-        if (inConsentContext(nodes[k]) || allowContext) {
-          if (doClick(nodes[k])) { setCooldown(); return true; }
-        }
+        if (!inConsentContext(nodes[k])) continue;
+        if (shouldClickAccept(nodes[k]) && doClick(nodes[k])) { setCooldown(); return true; }
       }
     }
     return false;
@@ -409,4 +433,31 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     });
     return true;
   }
+});
+
+/** Verify Pro status with ExtensionPay; overwrites storage so tampering is reverted. Call on startup and on install. */
+var extpayForPro = null;
+try {
+  if (typeof ExtPay !== 'undefined' && typeof EXTPAY_EXTENSION_ID !== 'undefined') {
+    extpayForPro = ExtPay(EXTPAY_EXTENSION_ID);
+    if (extpayForPro && typeof extpayForPro.startBackground === 'function') extpayForPro.startBackground();
+  }
+} catch (e) {}
+function syncProFromExtPay() {
+  try {
+    if (!extpayForPro || typeof extpayForPro.getUser !== 'function') return;
+    extpayForPro.getUser()
+      .then(function (user) {
+        chrome.storage.local.set({ cookieControl_pro: !!(user && user.paid) });
+      })
+      .catch(function () {
+        chrome.storage.local.set({ cookieControl_pro: false });
+      });
+  } catch (e) {
+    try { chrome.storage.local.set({ cookieControl_pro: false }); } catch (_) {}
+  }
+}
+syncProFromExtPay();
+chrome.runtime.onInstalled.addListener(function () {
+  syncProFromExtPay();
 });
